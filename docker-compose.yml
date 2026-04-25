@@ -1,0 +1,15 @@
+services:
+  postgres:
+    image: postgres:16
+    container_name: ungyul-postgres
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_DB: ungyul
+      POSTGRES_USER: ungyul
+      POSTGRES_PASSWORD: ungyul1234
+    volumes:
+      - ungyul-postgres-data:/var/lib/postgresql/data
+
+volumes:
+  ungyul-postgres-data:
