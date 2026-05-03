@@ -14,3 +14,8 @@ spring:
 
   flyway:
     enabled: false
+
+ai:
+  fastapi:
+    base-url: http://localhost:8000
+    internal-api-key: test-secret
