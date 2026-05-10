@@ -23,4 +23,14 @@ public class AiClient {
         .bodyToMono(WeeklyInsightResponseDto.class)
         .block();
   }
+
+  public SajuCalculateResponseDto calculateSaju(SajuCalculateRequestDto request) {
+    return fastApiWebClient.post()
+        .uri("/ai/saju/calculate")
+        .header("X-Internal-Api-Key", internalApiKey)
+        .bodyValue(request)
+        .retrieve()
+        .bodyToMono(SajuCalculateResponseDto.class)
+        .block();
+  }
 }

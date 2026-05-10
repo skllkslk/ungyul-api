@@ -11,6 +11,7 @@ import com.ungyul.api.ai.AiClient;
 import com.ungyul.api.ai.WeeklyInsightResponseDto;
 import com.ungyul.api.dailyreport.DailyReport;
 import com.ungyul.api.dailyreport.DailyReportRepository;
+import com.ungyul.api.sajuprofile.SajuProfileRepository;
 import java.time.LocalDate;
 import java.util.List;
 import org.junit.jupiter.api.DisplayName;
@@ -31,6 +32,9 @@ public class InsightServiceTest {
 
   @Mock
   private InsightReportRepository insightReportRepository;
+
+  @Mock
+  private SajuProfileRepository sajuProfileRepository;
 
   @InjectMocks
   private InsightService insightService;

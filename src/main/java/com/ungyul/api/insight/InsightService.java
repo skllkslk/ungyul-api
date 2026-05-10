@@ -5,6 +5,7 @@ import com.ungyul.api.ai.WeeklyInsightRequestDto;
 import com.ungyul.api.ai.WeeklyInsightResponseDto;
 import com.ungyul.api.dailyreport.DailyReport;
 import com.ungyul.api.dailyreport.DailyReportRepository;
+import com.ungyul.api.sajuprofile.SajuProfileRepository;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -18,10 +19,15 @@ public class InsightService {
   private final DailyReportRepository dailyReportRepository;
   private final AiClient aiClient;
   private final InsightReportRepository insightReportRepository;
+  private final SajuProfileRepository sajuProfileRepository;
 
   public WeeklyInsightResponseDto generateWeeklyInsight(Long userId) {
     LocalDate end = LocalDate.now();
     LocalDate start = end.minusDays(6);
+
+    String profileSummary = sajuProfileRepository.findByUserId(userId)
+        .map(p -> p.getProfileText())
+        .orElse(null);
 
     List<DailyReport> reports = dailyReportRepository.findByUserIdAndReportDateBetween(userId,
         start, end);
@@ -29,7 +35,7 @@ public class InsightService {
         .userId(userId)
         .periodStartDate(start)
         .periodEndDate(end)
-        .profileSummary("기본 프로필 요약")
+        .profileSummary(profileSummary)
         .dailyReports(
             reports.stream()
                 .map(report -> WeeklyInsightRequestDto.DailyReportItem.builder()
@@ -48,7 +54,7 @@ public class InsightService {
         .periodEndDate(end)
         .title(response.getTitle())
         .summary(response.getSummary())
-        .interpretation(String.join(",", response.getActionSuggestions()))
+        .interpretation(response.getInterpretation())
         .actionSuggestions(String.join(",", response.getActionSuggestions()))
         .createdAt(LocalDateTime.now())
         .build();
