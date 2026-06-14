@@ -10,13 +10,14 @@ import static org.mockito.Mockito.verify;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
-import java.util.NoSuchElementException;
 import java.util.Optional;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.server.ResponseStatusException;
 
 @ExtendWith(MockitoExtension.class)
 class BirthProfileServiceTest {
@@ -101,10 +102,12 @@ class BirthProfileServiceTest {
   }
 
   @Test
-  void getByUserId_프로필_없으면_예외() {
+  void getByUserId_프로필_없으면_404_예외() {
     given(birthProfileRepository.findByUserId(999L)).willReturn(Optional.empty());
 
     assertThatThrownBy(() -> birthProfileService.getByUserId(999L))
-        .isInstanceOf(NoSuchElementException.class);
+        .isInstanceOf(ResponseStatusException.class)
+        .satisfies(e -> assertThat(((ResponseStatusException) e).getStatusCode())
+            .isEqualTo(HttpStatus.NOT_FOUND));
   }
 }

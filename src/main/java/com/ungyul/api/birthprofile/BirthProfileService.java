@@ -2,8 +2,10 @@ package com.ungyul.api.birthprofile;
 
 import java.time.LocalDateTime;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
 
 @Service
 @RequiredArgsConstructor
@@ -41,7 +43,7 @@ public class BirthProfileService {
   @Transactional(readOnly = true)
   public BirthProfileResponse getByUserId(Long userId) {
     BirthProfile profile = birthProfileRepository.findByUserId(userId)
-        .orElseThrow();
+        .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "생년월일 프로필 없음"));
     return toResponse(profile);
   }
 
