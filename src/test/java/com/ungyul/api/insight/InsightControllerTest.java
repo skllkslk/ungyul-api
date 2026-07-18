@@ -1,7 +1,6 @@
-package com.ungyul.api.dailyreport;
+package com.ungyul.api.insight;
 
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.doAnswer;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.authentication;
@@ -16,25 +15,27 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletRequest;
 import jakarta.servlet.ServletResponse;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.http.MediaType;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.web.server.ResponseStatusException;
 
-@WebMvcTest(DailyReportController.class)
-class DailyReportControllerTest {
+@WebMvcTest(InsightController.class)
+class InsightControllerTest {
 
     @Autowired
     private MockMvc mockMvc;
 
     @MockitoBean
-    private DailyReportService dailyReportService;
+    private InsightService insightService;
 
     @MockitoBean
     private JwtAuthenticationFilter jwtAuthenticationFilter;
@@ -58,62 +59,54 @@ class DailyReportControllerTest {
                 USER_ID, null, List.of(new SimpleGrantedAuthority("ROLE_USER")));
     }
 
-    @Test
-    void POST_daily_reports_성공() throws Exception {
-        DailyReportResponse response = DailyReportResponse.builder()
-                .id(1L)
-                .reportDate(LocalDate.of(2026, 4, 26))
-                .mood("happy")
-                .content("오늘 좋은 날")
+    private static InsightReportResponse sampleResponse() {
+        return InsightReportResponse.builder()
+                .id(10L)
+                .insightType("WEEKLY")
+                .periodStartDate(LocalDate.of(2026, 7, 13))
+                .periodEndDate(LocalDate.of(2026, 7, 19))
+                .title("이번 주 운결 흐름")
+                .summary("회복과 정리가 중요합니다.")
+                .interpretation("피로와 집중 저하가 반복됩니다.")
+                .actionSuggestions(List.of("목표 줄이기", "수면 점검하기"))
+                .createdAt(LocalDateTime.of(2026, 7, 19, 10, 0))
                 .build();
-
-        given(dailyReportService.create(eq(USER_ID), any())).willReturn(response);
-
-        mockMvc.perform(post("/api/daily-reports")
-                        .with(csrf())
-                        .with(authentication(mockAuth()))
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("""
-                                {
-                                  "reportDate": "2026-04-26",
-                                  "mood": "happy",
-                                  "content": "오늘 좋은 날"
-                                }
-                                """))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id").value(1L))
-                .andExpect(jsonPath("$.mood").value("happy"))
-                .andExpect(jsonPath("$.content").value("오늘 좋은 날"));
     }
 
     @Test
-    void GET_daily_reports_성공() throws Exception {
-        List<DailyReportResponse> responses = List.of(
-                DailyReportResponse.builder()
-                        .id(1L).reportDate(LocalDate.of(2026, 4, 26)).mood("happy").content("내용1").build(),
-                DailyReportResponse.builder()
-                        .id(2L).reportDate(LocalDate.of(2026, 4, 25)).mood("sad").content("내용2").build()
-        );
+    void GET_weekly_latest_성공() throws Exception {
+        given(insightService.getLatestWeeklyInsight(USER_ID)).willReturn(sampleResponse());
 
-        given(dailyReportService.getList(USER_ID)).willReturn(responses);
-
-        mockMvc.perform(get("/api/daily-reports")
+        mockMvc.perform(get("/api/insights/weekly/latest")
                         .with(csrf())
                         .with(authentication(mockAuth())))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.length()").value(2))
-                .andExpect(jsonPath("$[0].mood").value("happy"))
-                .andExpect(jsonPath("$[1].mood").value("sad"));
+                .andExpect(jsonPath("$.id").value(10L))
+                .andExpect(jsonPath("$.title").value("이번 주 운결 흐름"))
+                .andExpect(jsonPath("$.actionSuggestions.length()").value(2))
+                .andExpect(jsonPath("$.actionSuggestions[0]").value("목표 줄이기"));
     }
 
     @Test
-    void GET_daily_reports_빈_목록() throws Exception {
-        given(dailyReportService.getList(USER_ID)).willReturn(List.of());
+    void GET_weekly_latest_리포트_없으면_404() throws Exception {
+        given(insightService.getLatestWeeklyInsight(USER_ID))
+                .willThrow(new ResponseStatusException(HttpStatus.NOT_FOUND, "주간 리포트가 아직 없습니다."));
 
-        mockMvc.perform(get("/api/daily-reports")
+        mockMvc.perform(get("/api/insights/weekly/latest")
+                        .with(csrf())
+                        .with(authentication(mockAuth())))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void POST_weekly_generate_성공() throws Exception {
+        given(insightService.generateWeeklyInsight(USER_ID)).willReturn(sampleResponse());
+
+        mockMvc.perform(post("/api/insights/weekly/generate")
                         .with(csrf())
                         .with(authentication(mockAuth())))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.length()").value(0));
+                .andExpect(jsonPath("$.id").value(10L))
+                .andExpect(jsonPath("$.summary").value("회복과 정리가 중요합니다."));
     }
 }

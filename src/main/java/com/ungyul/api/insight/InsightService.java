@@ -10,7 +10,9 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 
 @Service
 @RequiredArgsConstructor
@@ -21,7 +23,7 @@ public class InsightService {
   private final InsightReportRepository insightReportRepository;
   private final SajuProfileRepository sajuProfileRepository;
 
-  public WeeklyInsightResponseDto generateWeeklyInsight(Long userId) {
+  public InsightReportResponse generateWeeklyInsight(Long userId) {
     LocalDate end = LocalDate.now();
     LocalDate start = end.minusDays(6);
 
@@ -55,11 +57,18 @@ public class InsightService {
         .title(response.getTitle())
         .summary(response.getSummary())
         .interpretation(response.getInterpretation())
-        .actionSuggestions(String.join(",", response.getActionSuggestions()))
+        .actionSuggestions(String.join("\n", response.getActionSuggestions()))
         .createdAt(LocalDateTime.now())
         .build();
-    insightReportRepository.save(insightReport);
-    return response;
+    return InsightReportResponse.from(insightReportRepository.save(insightReport));
+  }
+
+  public InsightReportResponse getLatestWeeklyInsight(Long userId) {
+    InsightReport report = insightReportRepository
+        .findTopByUserIdAndInsightTypeOrderByCreatedAtDesc(userId, "WEEKLY")
+        .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,
+            "주간 리포트가 아직 없습니다."));
+    return InsightReportResponse.from(report);
   }
 
 }
