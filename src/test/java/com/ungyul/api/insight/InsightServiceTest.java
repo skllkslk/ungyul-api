@@ -6,6 +6,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 
 import com.ungyul.api.ai.AiClient;
@@ -13,8 +14,10 @@ import com.ungyul.api.ai.WeeklyInsightResponseDto;
 import com.ungyul.api.dailyreport.DailyReport;
 import com.ungyul.api.dailyreport.DailyReportRepository;
 import com.ungyul.api.sajuprofile.SajuProfileRepository;
+import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.temporal.TemporalAdjusters;
 import java.util.List;
 import java.util.Optional;
 import org.junit.jupiter.api.DisplayName;
@@ -63,6 +66,12 @@ public class InsightServiceTest {
         List.of("목표 줄이기", "수면 점검하기")
     );
 
+    given(insightReportRepository.findByUserIdAndInsightTypeAndPeriodStartDate(
+        anyLong(),
+        any(String.class),
+        any(LocalDate.class)
+    )).willReturn(Optional.empty());
+
     given(dailyReportRepository.findByUserIdAndReportDateBetween(
         anyLong(),
         any(LocalDate.class),
@@ -87,9 +96,45 @@ public class InsightServiceTest {
     verify(insightReportRepository).save(argThat(saved ->
         saved.getUserId().equals(userId)
             && saved.getInsightType().equals("WEEKLY")
+            && saved.getPeriodStartDate().getDayOfWeek() == DayOfWeek.MONDAY
+            && saved.getPeriodEndDate().equals(saved.getPeriodStartDate().plusDays(6))
             && saved.getTitle().equals("이번 주 운결 흐름")
             && saved.getActionSuggestions().contains("목표 줄이기")
     ));
+  }
+
+  @Test
+  @DisplayName("이번 주 리포트가 이미 있으면 AI를 호출하지 않고 기존 리포트를 반환한다")
+  void generateWeeklyInsight_alreadyExistsThisWeek() {
+    // given
+    Long userId = 1L;
+    LocalDate monday = LocalDate.now().with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY));
+
+    InsightReport existing = InsightReport.builder()
+        .id(10L)
+        .userId(userId)
+        .insightType("WEEKLY")
+        .periodStartDate(monday)
+        .periodEndDate(monday.plusDays(6))
+        .title("이미 생성된 리포트")
+        .summary("요약")
+        .interpretation("해석")
+        .actionSuggestions("제안1\n제안2")
+        .createdAt(LocalDateTime.now())
+        .build();
+
+    given(insightReportRepository.findByUserIdAndInsightTypeAndPeriodStartDate(
+        userId, "WEEKLY", monday))
+        .willReturn(Optional.of(existing));
+
+    // when
+    InsightReportResponse result = insightService.generateWeeklyInsight(userId);
+
+    // then
+    assertThat(result.getId()).isEqualTo(10L);
+    assertThat(result.getTitle()).isEqualTo("이미 생성된 리포트");
+    verify(aiClient, never()).generateWeeklyInsight(any());
+    verify(insightReportRepository, never()).save(any());
   }
 
   @Test

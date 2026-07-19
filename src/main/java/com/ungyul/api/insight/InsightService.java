@@ -6,9 +6,12 @@ import com.ungyul.api.ai.WeeklyInsightResponseDto;
 import com.ungyul.api.dailyreport.DailyReport;
 import com.ungyul.api.dailyreport.DailyReportRepository;
 import com.ungyul.api.sajuprofile.SajuProfileRepository;
+import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.temporal.TemporalAdjusters;
 import java.util.List;
+import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -24,8 +27,14 @@ public class InsightService {
   private final SajuProfileRepository sajuProfileRepository;
 
   public InsightReportResponse generateWeeklyInsight(Long userId) {
-    LocalDate end = LocalDate.now();
-    LocalDate start = end.minusDays(6);
+    LocalDate start = LocalDate.now().with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY));
+    LocalDate end = start.plusDays(6);
+
+    Optional<InsightReport> existing = insightReportRepository
+        .findByUserIdAndInsightTypeAndPeriodStartDate(userId, "WEEKLY", start);
+    if (existing.isPresent()) {
+      return InsightReportResponse.from(existing.get());
+    }
 
     String profileSummary = sajuProfileRepository.findByUserId(userId)
         .map(p -> p.getProfileText())
