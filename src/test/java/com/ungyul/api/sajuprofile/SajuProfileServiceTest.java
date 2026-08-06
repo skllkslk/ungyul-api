@@ -77,10 +77,19 @@ class SajuProfileServiceTest {
   }
 
   @Test
-  void generate_기존_프로필_업데이트_성공() {
-    BirthProfile birth = birthProfile();
+  void generate_출생정보_변경후_재생성_성공() {
     SajuCalculateResponseDto calculated = calculatedResponse();
     SajuProfile existing = new SajuProfile(1L, 10L, "을", "구 프로필 텍스트", "{}");
+    BirthProfile birth = BirthProfile.builder()
+        .id(10L)
+        .userId(1L)
+        .birthDate(LocalDate.of(1995, 3, 15))
+        .birthTime(LocalTime.of(14, 30))
+        .isLunar(false)
+        .gender("MALE")
+        .createdAt(LocalDateTime.now())
+        .updatedAt(existing.getUpdatedAt().plusSeconds(1))
+        .build();
 
     given(birthProfileRepository.findByUserId(1L)).willReturn(Optional.of(birth));
     given(aiClient.calculateSaju(any())).willReturn(calculated);
@@ -91,6 +100,31 @@ class SajuProfileServiceTest {
 
     assertThat(response.getDayMaster()).isEqualTo("갑");
     verify(sajuProfileRepository).save(existing);
+  }
+
+  @Test
+  void generate_출생정보_변경없으면_AI_재호출_없이_기존_프로필_반환() {
+    SajuProfile existing = new SajuProfile(1L, 10L, "을", "기존 프로필 텍스트", "{}");
+    BirthProfile birth = BirthProfile.builder()
+        .id(10L)
+        .userId(1L)
+        .birthDate(LocalDate.of(1995, 3, 15))
+        .birthTime(LocalTime.of(14, 30))
+        .isLunar(false)
+        .gender("MALE")
+        .createdAt(LocalDateTime.now())
+        .updatedAt(existing.getUpdatedAt().minusSeconds(1))
+        .build();
+
+    given(birthProfileRepository.findByUserId(1L)).willReturn(Optional.of(birth));
+    given(sajuProfileRepository.findByUserId(1L)).willReturn(Optional.of(existing));
+
+    SajuProfileResponse response = sajuProfileService.generate(1L);
+
+    assertThat(response.getDayMaster()).isEqualTo("을");
+    assertThat(response.getProfileText()).isEqualTo("기존 프로필 텍스트");
+    verify(aiClient, org.mockito.Mockito.never()).calculateSaju(any());
+    verify(sajuProfileRepository, org.mockito.Mockito.never()).save(any());
   }
 
   @Test

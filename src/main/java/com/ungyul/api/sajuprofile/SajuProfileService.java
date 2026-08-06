@@ -24,6 +24,13 @@ public class SajuProfileService {
     BirthProfile birthProfile = birthProfileRepository.findByUserId(userId)
         .orElseThrow(() -> new IllegalArgumentException("출생정보가 존재하지 않습니다."));
 
+    Optional<SajuProfile> existingProfile = sajuProfileRepository.findByUserId(userId);
+
+    if (existingProfile.isPresent()
+        && !birthProfile.getUpdatedAt().isAfter(existingProfile.get().getUpdatedAt())) {
+      return SajuProfileResponse.from(existingProfile.get());
+    }
+
     SajuCalculateResponseDto calculated = aiClient.calculateSaju(
         SajuCalculateRequestDto.builder()
             .userId(userId)
@@ -33,8 +40,6 @@ public class SajuProfileService {
             .gender(birthProfile.getGender())
             .build()
     );
-
-    Optional<SajuProfile> existingProfile = sajuProfileRepository.findByUserId(userId);
 
     SajuProfile profile = existingProfile
         .map(existing -> {
