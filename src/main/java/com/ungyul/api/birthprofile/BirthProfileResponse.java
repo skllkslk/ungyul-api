@@ -11,6 +11,7 @@ public class BirthProfileResponse {
 
   private Long id;
   private Long userId;
+  private String name;
   private LocalDate birthDate;
   private LocalTime birthTime;
   private Boolean isLunar;

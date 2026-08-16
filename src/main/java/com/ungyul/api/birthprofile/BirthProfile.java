@@ -28,6 +28,8 @@ public class BirthProfile {
 
   private Long userId;
 
+  private String name;
+
   private LocalDate birthDate;
 
   private LocalTime birthTime;
@@ -41,11 +43,13 @@ public class BirthProfile {
   private LocalDateTime updatedAt;
 
   public void update(
+      String name,
       LocalDate birthDate,
       LocalTime birthTime,
       Boolean isLunar,
       String gender
   ) {
+    this.name = name;
     this.birthDate = birthDate;
     this.birthTime = birthTime;
     this.isLunar = isLunar;

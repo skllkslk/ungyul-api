@@ -35,6 +35,7 @@ class BirthProfileServiceTest {
     BirthProfile saved = BirthProfile.builder()
         .id(1L)
         .userId(1L)
+        .name("홍길동")
         .birthDate(LocalDate.of(1995, 3, 15))
         .birthTime(LocalTime.of(14, 30))
         .isLunar(false)
@@ -50,6 +51,7 @@ class BirthProfileServiceTest {
 
     assertThat(response.getId()).isEqualTo(1L);
     assertThat(response.getUserId()).isEqualTo(1L);
+    assertThat(response.getName()).isEqualTo("홍길동");
     assertThat(response.getBirthDate()).isEqualTo(LocalDate.of(1995, 3, 15));
     assertThat(response.getIsLunar()).isFalse();
     assertThat(response.getGender()).isEqualTo("MALE");
@@ -84,6 +86,7 @@ class BirthProfileServiceTest {
     BirthProfile profile = BirthProfile.builder()
         .id(1L)
         .userId(1L)
+        .name("홍길동")
         .birthDate(LocalDate.of(1995, 3, 15))
         .birthTime(LocalTime.of(14, 30))
         .isLunar(false)
@@ -97,6 +100,7 @@ class BirthProfileServiceTest {
     BirthProfileResponse response = birthProfileService.getByUserId(1L);
 
     assertThat(response.getId()).isEqualTo(1L);
+    assertThat(response.getName()).isEqualTo("홍길동");
     assertThat(response.getBirthDate()).isEqualTo(LocalDate.of(1995, 3, 15));
     assertThat(response.getGender()).isEqualTo("MALE");
   }

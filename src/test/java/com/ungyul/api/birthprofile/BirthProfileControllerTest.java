@@ -68,6 +68,7 @@ class BirthProfileControllerTest {
         BirthProfileResponse response = BirthProfileResponse.builder()
                 .id(1L)
                 .userId(USER_ID)
+                .name("홍길동")
                 .birthDate(LocalDate.of(1995, 3, 15))
                 .birthTime(LocalTime.of(14, 30))
                 .isLunar(false)
@@ -82,6 +83,7 @@ class BirthProfileControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {
+                                  "name": "홍길동",
                                   "birthDate": "1995-03-15",
                                   "birthTime": "14:30:00",
                                   "isLunar": false,
@@ -91,6 +93,7 @@ class BirthProfileControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(1L))
                 .andExpect(jsonPath("$.userId").value(1L))
+                .andExpect(jsonPath("$.name").value("홍길동"))
                 .andExpect(jsonPath("$.birthDate").value("1995-03-15"))
                 .andExpect(jsonPath("$.isLunar").value(false))
                 .andExpect(jsonPath("$.gender").value("MALE"));

@@ -20,6 +20,7 @@ class BirthProfileRepositoryTest {
   void findByUserId_저장된_프로필_반환() {
     birthProfileRepository.save(BirthProfile.builder()
         .userId(1L)
+        .name("홍길동")
         .birthDate(LocalDate.of(1995, 3, 15))
         .birthTime(LocalTime.of(14, 30))
         .isLunar(false)
@@ -31,6 +32,7 @@ class BirthProfileRepositoryTest {
     Optional<BirthProfile> result = birthProfileRepository.findByUserId(1L);
 
     assertThat(result).isPresent();
+    assertThat(result.get().getName()).isEqualTo("홍길동");
     assertThat(result.get().getBirthDate()).isEqualTo(LocalDate.of(1995, 3, 15));
     assertThat(result.get().getGender()).isEqualTo("MALE");
   }

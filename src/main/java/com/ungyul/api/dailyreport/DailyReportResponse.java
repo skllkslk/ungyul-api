@@ -1,6 +1,7 @@
 package com.ungyul.api.dailyreport;
 
 import java.time.LocalDate;
+import java.util.List;
 import lombok.Builder;
 import lombok.Getter;
 
@@ -12,4 +13,6 @@ public class DailyReportResponse {
   private LocalDate reportDate;
   private String mood;
   private String content;
+  private Integer energy;
+  private List<String> tags;
 }

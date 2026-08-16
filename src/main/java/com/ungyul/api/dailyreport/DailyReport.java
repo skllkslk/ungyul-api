@@ -40,5 +40,10 @@ public class DailyReport {
   @Column(columnDefinition = "TEXT")
   private String content;
 
+  private Integer energy;
+
+  @Column(columnDefinition = "TEXT")
+  private String tags;
+
   private LocalDateTime createdAt;
 }

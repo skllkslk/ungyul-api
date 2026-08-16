@@ -46,6 +46,8 @@ class DailyReportServiceTest {
         .reportDate(LocalDate.of(2026, 4, 26))
         .mood("happy")
         .content("오늘 좋은 날")
+        .energy(4)
+        .tags("행복,여행")
         .createdAt(LocalDateTime.now())
         .build();
 
@@ -53,7 +55,7 @@ class DailyReportServiceTest {
     given(dailyReportRepository.save(any())).willReturn(saved);
 
     CreateDailyReportRequest request = new CreateDailyReportRequest(
-        LocalDate.of(2026, 4, 26), "happy", "오늘 좋은 날");
+        LocalDate.of(2026, 4, 26), "happy", "오늘 좋은 날", 4, List.of("행복", "여행"));
 
     DailyReportResponse response = dailyReportService.create(1L, request);
 
@@ -61,6 +63,8 @@ class DailyReportServiceTest {
     assertThat(response.getReportDate()).isEqualTo(LocalDate.of(2026, 4, 26));
     assertThat(response.getMood()).isEqualTo("happy");
     assertThat(response.getContent()).isEqualTo("오늘 좋은 날");
+    assertThat(response.getEnergy()).isEqualTo(4);
+    assertThat(response.getTags()).containsExactly("행복", "여행");
   }
 
   @Test
@@ -68,7 +72,7 @@ class DailyReportServiceTest {
     given(userRepository.findById(999L)).willReturn(Optional.empty());
 
     CreateDailyReportRequest request = new CreateDailyReportRequest(
-        LocalDate.of(2026, 4, 26), "happy", "내용");
+        LocalDate.of(2026, 4, 26), "happy", "내용", 3, List.of());
 
     assertThatThrownBy(() -> dailyReportService.create(999L, request))
         .isInstanceOf(NoSuchElementException.class);
@@ -80,10 +84,10 @@ class DailyReportServiceTest {
     List<DailyReport> reports = List.of(
         DailyReport.builder().id(1L).user(user)
             .reportDate(LocalDate.of(2026, 4, 26))
-            .mood("happy").content("내용1").createdAt(LocalDateTime.now()).build(),
+            .mood("happy").content("내용1").energy(5).tags("행복").createdAt(LocalDateTime.now()).build(),
         DailyReport.builder().id(2L).user(user)
             .reportDate(LocalDate.of(2026, 4, 25))
-            .mood("sad").content("내용2").createdAt(LocalDateTime.now()).build()
+            .mood("sad").content("내용2").energy(2).tags(null).createdAt(LocalDateTime.now()).build()
     );
 
     given(dailyReportRepository.findByUserId(1L)).willReturn(reports);
@@ -92,7 +96,10 @@ class DailyReportServiceTest {
 
     assertThat(result).hasSize(2);
     assertThat(result.get(0).getMood()).isEqualTo("happy");
+    assertThat(result.get(0).getEnergy()).isEqualTo(5);
+    assertThat(result.get(0).getTags()).containsExactly("행복");
     assertThat(result.get(1).getMood()).isEqualTo("sad");
+    assertThat(result.get(1).getTags()).isEmpty();
   }
 
   @Test

@@ -65,6 +65,8 @@ class DailyReportControllerTest {
                 .reportDate(LocalDate.of(2026, 4, 26))
                 .mood("happy")
                 .content("오늘 좋은 날")
+                .energy(4)
+                .tags(List.of("행복", "여행"))
                 .build();
 
         given(dailyReportService.create(eq(USER_ID), any())).willReturn(response);
@@ -77,13 +79,18 @@ class DailyReportControllerTest {
                                 {
                                   "reportDate": "2026-04-26",
                                   "mood": "happy",
-                                  "content": "오늘 좋은 날"
+                                  "content": "오늘 좋은 날",
+                                  "energy": 4,
+                                  "tags": ["행복", "여행"]
                                 }
                                 """))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(1L))
                 .andExpect(jsonPath("$.mood").value("happy"))
-                .andExpect(jsonPath("$.content").value("오늘 좋은 날"));
+                .andExpect(jsonPath("$.content").value("오늘 좋은 날"))
+                .andExpect(jsonPath("$.energy").value(4))
+                .andExpect(jsonPath("$.tags[0]").value("행복"))
+                .andExpect(jsonPath("$.tags[1]").value("여행"));
     }
 
     @Test

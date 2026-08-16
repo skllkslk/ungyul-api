@@ -18,6 +18,7 @@ public class BirthProfileService {
     BirthProfile profile = birthProfileRepository.findByUserId(userId)
         .map(existing -> {
           existing.update(
+              request.getName(),
               request.getBirthDate(),
               request.getBirthTime(),
               request.getIsLunar(),
@@ -28,6 +29,7 @@ public class BirthProfileService {
         .orElseGet(() -> birthProfileRepository.save(
             BirthProfile.builder()
                 .userId(userId)
+                .name(request.getName())
                 .birthDate(request.getBirthDate())
                 .birthTime(request.getBirthTime())
                 .isLunar(request.getIsLunar())
@@ -51,6 +53,7 @@ public class BirthProfileService {
     return BirthProfileResponse.builder()
         .id(profile.getId())
         .userId(profile.getUserId())
+        .name(profile.getName())
         .birthDate(profile.getBirthDate())
         .birthTime(profile.getBirthTime())
         .isLunar(profile.getIsLunar())

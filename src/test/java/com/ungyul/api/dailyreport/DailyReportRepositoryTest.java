@@ -31,7 +31,7 @@ class DailyReportRepositoryTest {
 
     dailyReportRepository.save(DailyReport.builder()
         .user(user1).reportDate(LocalDate.of(2026, 4, 26))
-        .mood("happy").content("유저1 내용").createdAt(LocalDateTime.now()).build());
+        .mood("happy").content("유저1 내용").energy(4).tags("행복,여행").createdAt(LocalDateTime.now()).build());
     dailyReportRepository.save(DailyReport.builder()
         .user(user2).reportDate(LocalDate.of(2026, 4, 26))
         .mood("sad").content("유저2 내용").createdAt(LocalDateTime.now()).build());
@@ -40,6 +40,8 @@ class DailyReportRepositoryTest {
 
     assertThat(result).hasSize(1);
     assertThat(result.get(0).getContent()).isEqualTo("유저1 내용");
+    assertThat(result.get(0).getEnergy()).isEqualTo(4);
+    assertThat(result.get(0).getTags()).isEqualTo("행복,여행");
   }
 
   @Test
